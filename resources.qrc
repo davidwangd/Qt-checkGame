@@ -1,0 +1,18 @@
+<RCC>
+    <qresource prefix="/pics">
+        <file alias="redPawn">1.png</file>
+        <file alias="whitePawn">2.png</file>
+        <file alias="other">3.png</file>
+        <file alias="whiteKing">4.png</file>
+        <file alias="empty">5.png</file>
+        <file alias="redQueen">6.png</file>
+    </qresource>
+    <qresource prefix="/">
+        <file>1.png</file>
+        <file>2.png</file>
+        <file>3.png</file>
+        <file>4.png</file>
+        <file>5.png</file>
+        <file>6.png</file>
+    </qresource>
+</RCC>
