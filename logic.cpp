@@ -7,6 +7,7 @@
 Logic::Logic(MainWindow *window) : QObject(window){
     player = 0;
     this -> window = window;
+    tested = 0;
     icons = __ + 3;
     icons[0] = QIcon(QPixmap(":/5.png"));
     icons[1] = QIcon(QPixmap(":/1.png"));
@@ -94,6 +95,8 @@ void Logic::recieve(MessageType type, QString &str){
     }else if (type == TimeInfo){
         enemyTime = str.mid(0, 6).toInt() - 100000;
         myTime = str.mid(6).toInt() - 100000;
+    }else if (type == TestInfo){
+        test();
     }
 }
 
@@ -166,4 +169,25 @@ void Logic::numberPressed(int num){
             updateFrame();
         }
     }
+}
+
+void Logic::test(){
+    if (tested != 1){
+        tested = 1;
+        socketSend(TestInfo, "Test");
+    }else{
+        return;
+    }
+    showMessageBox("Test Mode On!", window);
+    currentPlayer = -1;
+    for (int i = 0;i < 10;i++)
+        for (int j = 0;j < 10;j++)
+            grid[i][j] = i+j&1?0:3;
+    grid[1][2] = 1; grid[1][6] = -1;
+    grid[1][8] = -1; grid[2][9] = 1;
+    grid[3][2] = 1; grid[4][3] = -1;
+    grid[5][2] = 1; grid[6][5] = 1;
+    grid[7][2] = 1; grid[8][5] = -1;
+    game->build();
+    updateFrame();
 }

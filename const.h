@@ -14,7 +14,8 @@ enum MessageType{
     GameStartInfo = 3322,
     AcceptDraw = 2111,
     RejectDraw = 1977,
-    LostInfo = 1772
+    LostInfo = 1772,
+    TestInfo = 8765
 };
 const int SIZE = 70;
 const QString availableStyle = "border-style:solid;border-width:2px;border-color:red;";

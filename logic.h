@@ -21,6 +21,7 @@ public slots:
     void recieve(MessageType type, QString &str);
     void startGame(int player = 1);
     void timeout();
+    void test();
 private:
     QIcon __[10];
     int grid[12][12];
@@ -29,6 +30,7 @@ private:
     BoardGame* game;
     QTimer *timer;
     int player;
+    int tested;
     int myTime, enemyTime;
     int currentPlayer;
 };

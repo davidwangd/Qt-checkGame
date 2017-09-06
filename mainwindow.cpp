@@ -30,7 +30,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionNewGame, SIGNAL(triggered()), this, SLOT(newGame()));
     connect(ui->actionConnectToGame, SIGNAL(triggered()), this, SLOT(connectToGame()));
     connect(ui->btnSend, SIGNAL(clicked()), this, SLOT(sendMessage()));
-
+    connect(ui->actionExit, SIGNAL(triggered()), qApp, SLOT(quit()));
+    connect(ui->actionTest, SIGNAL(triggered()), logic, SLOT(test()));
     connect(ui->btnDrawGame, SIGNAL(clicked()), logic, SLOT(drawGame()));
     connect(ui->btnSurrender, SIGNAL(clicked()), logic, SLOT(surrender()));
     ui->lineEdit->installEventFilter(this);
@@ -44,10 +45,20 @@ MainWindow::~MainWindow()
 }
 
 void MainWindow::newGame(){
-    if (networkStatus == None){
+
+    if (networkStatus != Server){
+        QInputDialog dialog(this);
+        dialog.setInputMode(QInputDialog::TextInput);
+        dialog.setTextValue("8888");
+        dialog.setLabelText("Please Select The Port You Want!");
+        dialog.show();
+        if (dialog.exec() != QInputDialog::Accepted){
+            return;
+        }
+        QString str = dialog.textValue();
         networkStatus = Server;
         server = new QTcpServer();
-        server->listen(QHostAddress::Any, PORT);
+        server->listen(QHostAddress::Any, str.toInt());
         int cur = server->isListening();
         if (cur){
             QString localHostName = QHostInfo::localHostName();
@@ -57,7 +68,7 @@ void MainWindow::newGame(){
                 if (add.protocol() == QAbstractSocket::IPv4Protocol)
                     address = add.toString();
             }
-            showErrorMessage("Successfully Build: Your Address :\n" + address, this);
+            showErrorMessage("Successfully Build: Your Address :\n" + address + ":" + str, this);
             QObject::connect(server, SIGNAL(newConnection()), this, SLOT(newConnection()));
             return;
         }
@@ -130,7 +141,9 @@ void MainWindow::connectToGame(){
     networkStatus = Client;
     if (dialog.exec()==QInputDialog::Accepted){
         QString cur = dialog.textValue();
-        socket->connectToHost(QHostAddress(cur), PORT);
+        QStringList list = cur.split(':');
+
+        socket->connectToHost(QHostAddress(list.at(0)), list.at(1).toInt());
         int status = socket->waitForConnected();
         if (status){
             connect(socket, SIGNAL(readyRead()), this, SLOT(readSocket()));
