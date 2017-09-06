@@ -13,11 +13,12 @@ enum MessageType{
     TimeInfo = 9933,
     GameStartInfo = 3322,
     AcceptDraw = 2111,
-    RejectDraw = 1977
+    RejectDraw = 1977,
+    LostInfo = 1772
 };
 const int SIZE = 70;
 const QString availableStyle = "border-style:solid;border-width:2px;border-color:red;";
-const QString operatedStyle = "border-style:solid;border-width:2px;border-coldor:black;";
+const QString operatedStyle = "border-style:solid;border-width:2px;border-color:black;";
 const QString defaultStyle = "";
 const int PORT = 8889;
 

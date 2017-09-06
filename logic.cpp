@@ -2,6 +2,7 @@
 #include "mainwindow.h"
 #include <QPixmap>
 #include <vector>
+#include <cstring>
 #include "board.h"
 Logic::Logic(MainWindow *window) : QObject(window){
     player = 0;
@@ -18,6 +19,8 @@ Logic::Logic(MainWindow *window) : QObject(window){
             grid[i][j] = (i+j)&1?0:3;
         }
     }
+    timer = new QTimer(this);
+    connect(timer, SIGNAL(timeout()), this, SLOT(timeout()));
     game = new BoardGame(this);
     game->build();
 }
@@ -49,28 +52,48 @@ void Logic::updateFrame(){
 
 void Logic::recieve(MessageType type, QString &str){
     if (type == SurrenderInfo){
-        showMessageBox("You Win! You Opponent Signed!", window);
         startGame(-player);
+        showMessageBox("You Win! You Opponent Signed!", window);
     }else if (type == DrawGameInfo){
         int type = showMessageBox("Your opponent Want a Draw Game!", window);
         if (type == QMessageBox::Accepted){
+            startGame(-player);
             socketSend(AcceptDraw,"Accepted!");
             showMessageBox("Draw Accepted! Draw Game!", window);
-            startGame(-player);
         }else{
             socketSend(RejectDraw,"Rejected!");
         }
     }else if (type == AcceptDraw){
-        showMessageBox("Draw Game", window);
         startGame(-player);
+        showMessageBox("Draw Game", window);
     }else if (type == RejectDraw){
         showMessageBox("Draw Game Request Rejected!", window);
     }else if (type == StepInfo){
         //收到对方的信号，此时正值对方星期，否则忽略信号。
         if (player == -currentPlayer){
-            game->processOperation(Operation(str));
+            Operation cur = Operation(str);
+            game->processOperation(cur);
             game->build();
+            updateFrame();
+            for (int i = 0;i < cur.ops.size();i++){
+                int x = cur.ops[i] / 10, y = cur.ops[i] % 10;
+                if (player == 1){
+                    x = 9 - x, y = 9 - y;
+                }
+                window->grid[x][y]->setStyleSheet(operatedStyle);
+            }
+            if (game->getAvailablePos().size() == 0){
+                startGame(-player);
+                socketSend(LostInfo, "Lost : Win");
+                showMessageBox("Sorry,You Lost The Game");
+            }
         }
+    }else if (type == LostInfo){
+        startGame(-player);
+        showMessageBox("You Win ! Good Game!", window);
+    }else if (type == TimeInfo){
+        enemyTime = str.mid(0, 6).toInt() - 100000;
+        myTime = str.mid(6).toInt() - 100000;
     }
 }
 
@@ -93,18 +116,41 @@ void Logic::socketSend(MessageType type, QString info)
 }
 
 void Logic::startGame(int player){
+    memset(grid, 0, sizeof(grid));
+    timer -> start(1000);
+    myTime = enemyTime = 0;
     this -> player = player;
     for (int i = 0;i <= 3;i++){
         for (int j = 0;j < 10;j++)
             if (i+j&1) grid[i][j] = 1;
     }
+    timer -> start();
     for (int i = 6;i < 10;i++){
         for (int j = 0;j < 10;j++)
             if (i+j&1) grid[i][j] = -1;
     }
+    for (int i = 0;i < 10;i++){
+        for (int j = 0;j < 10;j++)
+            if ((i+j)%2==0) grid[i][j] = 3;
+    }
     currentPlayer = 1;
     game->build();
     updateFrame();
+}
+
+void Logic::timeout(){
+    if (currentPlayer == player){
+        myTime++;
+        window->ui->lcdMyMin->display(myTime / 60);
+        window->ui->lcdMySec->display(myTime % 60);
+    }else{
+        enemyTime++;
+        window->ui->lcdEnemyMin->display(enemyTime / 60);
+        window->ui->lcdEnemySec->display(enemyTime % 60);
+    }
+    if (window->networkStatus==MainWindow::ConnectedServer){
+        socketSend(TimeInfo, QString::number(100000 + myTime) + QString::number(100000 + enemyTime));
+    }
 }
 
 void Logic::numberPressed(int num){

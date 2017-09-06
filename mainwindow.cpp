@@ -66,6 +66,7 @@ void MainWindow::newGame(){
 }
 
 void MainWindow::newConnection(){
+    qDebug("Connect!!1");
     if (networkStatus == Server){
         socket = server->nextPendingConnection();
         networkStatus = ConnectedServer;

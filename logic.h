@@ -3,6 +3,7 @@
 class MainWindow;
 #include <QObject>
 #include <QIcon>
+#include <QTimer>
 #include "const.h"
 class BoardGame;
 class Logic : public QObject{
@@ -19,12 +20,14 @@ public slots:
     void numberPressed(int num);
     void recieve(MessageType type, QString &str);
     void startGame(int player = 1);
+    void timeout();
 private:
     QIcon __[10];
     int grid[12][12];
     QIcon *icons;
     MainWindow* window;
     BoardGame* game;
+    QTimer *timer;
     int player;
     int myTime, enemyTime;
     int currentPlayer;

@@ -91,12 +91,11 @@ int BoardGame::processOperation(const Operation &op)
         for (int i = 1;i < abs(curX-tarX);i++){
             int x = curX - i * sgn(curX - tarX);
             int y = curY - i * sgn(curY - tarY);
-            qDebug("Tic(%d,%d)",x,y);
             logic -> grid[x][y] = 0;
         }
         logic -> grid[tarX][tarY] = logic -> grid[curX][curY];
         logic -> grid[curX][curY] = 0;
-        qDebug("End process((%d,%d)-(%d,%d))", curX,curY,tarX,tarY);
+        logic -> updateFrame();
     }
     logic -> currentPlayer = -logic -> currentPlayer;
     if (logic->grid[tarX][tarY] && tarX == 9) logic->grid[tarX][tarY] = 2;
