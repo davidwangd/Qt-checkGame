@@ -15,7 +15,8 @@ enum MessageType{
     AcceptDraw = 2111,
     RejectDraw = 1977,
     LostInfo = 1772,
-    TestInfo = 8765
+    TestInfo = 8765,
+    PressInfo = 1244
 };
 const int SIZE = 70;
 const QString availableStyle = "border-style:solid;border-width:2px;border-color:red;";

@@ -91,7 +91,6 @@ void MainWindow::newConnection(){
 
 int MainWindow::processPackage(QString &info)
 {
-    ui->chatBrowser->append(info);
     QString start = info.mid(0, 4);
     QString mid = info.mid(4, 1);
     QString last = info.mid(5);
@@ -100,8 +99,12 @@ int MainWindow::processPackage(QString &info)
         num = -1;
     }
     info = last;
-    ui->chatBrowser->append(start+mid+info);
+    ui->chatBrowser->append("Recieve: "+start+mid+info);
     return num;
+}
+
+int MainWindow::isConnected(){
+    return networkStatus == ConnectedClient || networkStatus == ConnectedServer;
 }
 
 void MainWindow::readSocket(){

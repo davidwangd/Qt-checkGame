@@ -39,6 +39,18 @@ void Logic::updateFrame(){
             }
         }
     }
+    int myP = 0, myK = 0, eP = 0,eK = 0;
+    for (int i = 0;i < 10;i++)
+        for (int j = 0;j < 10;j++){
+            if (grid[i][j] == player) myP++;
+            else if (grid[i][j] == player * 2) myK++;
+            else if (grid[i][j] == player * (-1)) eP++;
+            else if (grid[i][j] == player * (-2)) eK++;
+        }
+    window->ui->lcdEnemySec->display(eP);
+    window->ui->lcdEnemyMin->display(eK);
+    window->ui->lcdMyMin->display(myK);
+    window->ui->lcdMySec->display(myP);
     std::vector<int> available = game->getAvailablePos();
     for (int num : available){
         int x = num / 10;
@@ -49,6 +61,12 @@ void Logic::updateFrame(){
             window->grid[9-x][9-y]->setStyleSheet(availableStyle);
         }
     }
+    Operation op = game->getOperation();
+    for (int pos:op.ops){
+        int x= pos / 10, y = pos % 10;
+        if (player == 1) x = 9 - x, y = 9 - y;
+        window->grid[x][y]->setStyleSheet(operatedStyle);
+    }
 }
 
 void Logic::recieve(MessageType type, QString &str){
@@ -56,8 +74,14 @@ void Logic::recieve(MessageType type, QString &str){
         startGame(-player);
         showMessageBox("You Win! You Opponent Signed!", window);
     }else if (type == DrawGameInfo){
-        int type = showMessageBox("Your opponent Want a Draw Game!", window);
-        if (type == QMessageBox::Accepted){
+
+        QMessageBox cur(QMessageBox::Question, "Draw Game", "Your Opponent Want A Draw Game. Do You Agree?",QMessageBox::Yes | QMessageBox::No);
+        cur.setButtonText(QMessageBox::Yes, "Yes");
+        cur.setButtonText(QMessageBox::No, "No");
+        cur.show();
+        int type = cur.exec();
+//        showMessageBox(QString::number(type), window);
+        if (type == 16384){
             startGame(-player);
             socketSend(AcceptDraw,"Accepted!");
             showMessageBox("Draw Accepted! Draw Game!", window);
@@ -71,18 +95,9 @@ void Logic::recieve(MessageType type, QString &str){
         showMessageBox("Draw Game Request Rejected!", window);
     }else if (type == StepInfo){
         //收到对方的信号，此时正值对方星期，否则忽略信号。
+        // 忽略这个信号
+        // 这个信号目前只用于检测输赢。。
         if (player == -currentPlayer){
-            Operation cur = Operation(str);
-            game->processOperation(cur);
-            game->build();
-            updateFrame();
-            for (int i = 0;i < cur.ops.size();i++){
-                int x = cur.ops[i] / 10, y = cur.ops[i] % 10;
-                if (player == 1){
-                    x = 9 - x, y = 9 - y;
-                }
-                window->grid[x][y]->setStyleSheet(operatedStyle);
-            }
             if (game->getAvailablePos().size() == 0){
                 startGame(-player);
                 socketSend(LostInfo, "Lost : Win");
@@ -97,6 +112,8 @@ void Logic::recieve(MessageType type, QString &str){
         myTime = str.mid(6).toInt() - 100000;
     }else if (type == TestInfo){
         test();
+    }else if (type == PressInfo){
+        numberPressed(str.toInt());
     }
 }
 
@@ -105,29 +122,35 @@ void Logic::drawGame(){
 }
 
 void Logic::surrender(){
-    socketSend(SurrenderInfo, "Surrender");
-    showMessageBox("Surrendered, You lose", window);
-    startGame(-player);
+    if (window -> isConnected()){
+        socketSend(SurrenderInfo, "Surrender");
+        showMessageBox("Surrendered, You lose", window);
+        startGame(-player);
+    }
 }
 
 void Logic::socketSend(MessageType type, QString info)
 {
+    // 忽略掉所有的时间信息
+    if (type == TimeInfo) return;
     QByteArray *array = new QByteArray;
     array->clear();
     array->append(QString::number((int)type)+":"+info);
     window->socket->write(array->data());
+    window->ui->chatBrowser->append("Send  "+QString::number(type)+":"+info);
 }
 
 void Logic::startGame(int player){
     memset(grid, 0, sizeof(grid));
-    timer -> start(1000);
+    //timer -> start(1000);
     myTime = enemyTime = 0;
     this -> player = player;
     for (int i = 0;i <= 3;i++){
         for (int j = 0;j < 10;j++)
             if (i+j&1) grid[i][j] = 1;
     }
-    timer -> start();
+
+    //timer -> start();
     for (int i = 6;i < 10;i++){
         for (int j = 0;j < 10;j++)
             if (i+j&1) grid[i][j] = -1;
@@ -142,6 +165,9 @@ void Logic::startGame(int player){
 }
 
 void Logic::timeout(){
+    // This Function Is Banned From now on
+    return;
+
     if (currentPlayer == player){
         myTime++;
         window->ui->lcdMyMin->display(myTime / 60);
@@ -157,16 +183,29 @@ void Logic::timeout(){
 }
 
 void Logic::numberPressed(int num){
-    int x, y;
-    if (currentPlayer == player){
+    if (!window->isConnected()) return;
+    qDebug("NumberPress: %d , sender : %d",num, this->sender());
+    if (this->sender() && currentPlayer == player){
+        socketSend(PressInfo, QString::number(99-num));
+    }
+    if (currentPlayer == player || this->sender()==0){
+        QApplication::beep();
         qDebug("%d,%d\n", num/10, num%10);
         if (player == 1) num = 99 - num;
         if (game->pushPos(num)){
             QString cur = game->getOperation().toString();
-            socketSend(StepInfo, cur);
             game->processOperation(game->getOperation());
             game->build();
             updateFrame();
+            if (game->getAvailablePos().size() == 0){
+                if (player == currentPlayer){
+                    startGame(-player);
+                    showMessageBox("Sorry, You Lost", window);
+                }else{
+                    startGame(-player);
+                    showMessageBox("Congratulations!, You Won!", window);
+                }
+            }
         }
     }
 }

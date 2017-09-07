@@ -24,6 +24,7 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
     bool eventFilter(QObject *, QEvent *);
+    int isConnected();
 public slots:
     void newGame();
     void newConnection();

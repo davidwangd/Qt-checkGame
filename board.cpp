@@ -14,16 +14,15 @@ BoardGame::BoardGame(Logic *logic){
 
 void BoardGame::build(){
     root -> clear();
-    if (logic -> currentPlayer == logic -> player){
-        for (int i = 0;i < 10;i++){
-            for (int j = 0;j < 10;j++){
-                board[i][j] = logic -> grid[i][j] * logic -> currentPlayer;
-            }
+    for (int i = 0;i < 10;i++){
+        for (int j = 0;j < 10;j++){
+            board[i][j] = logic -> grid[i][j] * logic -> currentPlayer;
         }
-        dfs(root);
     }
+
     root->maxCount = 0;
     current = root;
+    dfs(root);
     op.ops.clear();
     showDebugInfo();
 }
