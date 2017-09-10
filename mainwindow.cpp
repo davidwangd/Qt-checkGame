@@ -34,9 +34,22 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionTest, SIGNAL(triggered()), logic, SLOT(test()));
     connect(ui->btnDrawGame, SIGNAL(clicked()), logic, SLOT(drawGame()));
     connect(ui->btnSurrender, SIGNAL(clicked()), logic, SLOT(surrender()));
+    connect(ui->btnPause, SIGNAL(clicked()), this, SLOT(pause()));
     ui->lineEdit->installEventFilter(this);
     logic -> updateFrame();
+    sound = new QSound("C:\\Users\\david\\Desktop\\programs\\Qt\\checkGame\\1.wav");
+    sound->play();
+    playing = 1;
     networkStatus = None;
+}
+
+void MainWindow::pause(){
+    if (playing == 0){
+        sound->play();
+    }else{
+        sound->stop();
+    }
+    playing ^= 1;
 }
 
 MainWindow::~MainWindow()

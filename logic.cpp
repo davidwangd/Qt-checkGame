@@ -189,7 +189,6 @@ void Logic::numberPressed(int num){
         socketSend(PressInfo, QString::number(99-num));
     }
     if (currentPlayer == player || this->sender()==0){
-        QApplication::beep();
         qDebug("%d,%d\n", num/10, num%10);
         if (player == 1) num = 99 - num;
         if (game->pushPos(num)){
@@ -197,6 +196,7 @@ void Logic::numberPressed(int num){
             game->processOperation(game->getOperation());
             game->build();
             updateFrame();
+            QApplication::beep();
             if (game->getAvailablePos().size() == 0){
                 if (player == currentPlayer){
                     startGame(-player);

@@ -5,6 +5,7 @@
 #include <vector>
 #include <algorithm>
 #include <QThread>
+#include <QApplication>
 using namespace std;
 
 BoardGame::BoardGame(Logic *logic){
@@ -97,8 +98,8 @@ int BoardGame::processOperation(const Operation &op)
         logic -> updateFrame();
     }
     logic -> currentPlayer = -logic -> currentPlayer;
-    if (logic->grid[tarX][tarY] && tarX == 9) logic->grid[tarX][tarY] = 2;
-    else if (logic->grid[tarX][tarY]==-1 && tarX == 0) logic->grid[tarX][tarY] = -2;
+    if (logic->grid[tarX][tarY] && tarX == 9) logic->grid[tarX][tarY] = 2, QApplication::beep();
+    else if (logic->grid[tarX][tarY]==-1 && tarX == 0) logic->grid[tarX][tarY] = -2, QApplication::beep();
     build();
     logic->updateFrame();
     return 0;

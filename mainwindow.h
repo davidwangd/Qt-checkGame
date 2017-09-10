@@ -10,6 +10,7 @@
 #include <QTcpServer>
 #include <QTcpSocket>
 #include <QEvent>
+#include <QSound>
 
 namespace Ui {
 class MainWindow;
@@ -31,6 +32,7 @@ public slots:
     void connectToGame();
     void readSocket();
     void sendMessage();
+    void pause();
     void disconnect();
     // process the package recieved by the network
     // return the value of package kind.
@@ -50,6 +52,8 @@ private:
     QSignalMapper *mapper;
     QTcpSocket *socket;
     QTcpServer *server;
+    QSound *sound;
+    int playing;
 };
 
 #endif // MAINWINDOW_H
